@@ -1,30 +1,27 @@
+
 /* MQTT to 7 Segment display
  *  used to display the water consumption on a adafruit 7 segment display
  *  based on HT16k33 backpack.
  *  
- *  by Alexander 
  *  version 01 - 8 july 2020 - Proof of Concept
  *  version 02 - 12 july 2020 - Added Si7021 temp/humidity sensor on i2c for use in bathroom
  *  version 03 - 12 july 2020 - Added additional MQTT Subscription to submit brighness level of display!
+ *  version 04 - 30 december 2020 - made it compile with PlatformIO and moved secrets to mysecrets.h
  */
-
+#include <Arduino.h>
+#include <mysecrets.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Wire.h> // Enable this line if using Arduino Uno, Mega, etc.
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
 #include "Adafruit_Si7021.h"
+#include <SPI.h> //I had to put this in here explicitly to make it work with PlatformIO
+#include <Adafruit_I2CDevice.h> //I had to put this in here explicitly to make it work with PlatformIO
 
 Adafruit_Si7021 sensor = Adafruit_Si7021();
 
 Adafruit_7segment matrix = Adafruit_7segment();
-
-
-// Update these with values suitable for your network.
-
-const char* ssid = "YOUR SSID";
-const char* password = "YOUR WIFI PASSWORD";
-const char* mqtt_server = "YOUR MQTT SERVER IP"; //like 192.168.1.4
 
 
 WiFiClient espClient;
@@ -33,6 +30,8 @@ long lastMsg = 0;
 char msg[50];
 int value = 0;
 
+void setup_wifi();
+void callback(char* topic, byte* payload, unsigned int length);
 
 
 void setup() {
@@ -123,7 +122,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
-    if (client.connect("ESP8266Client","YOUR MQ USERNAME,"YOUR MQPASSWORD)) {
+    if (client.connect(MQTTClient,MQTTUSER,MQTTPASSWORD)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
       //client.publish("outTopic", "hello world");
